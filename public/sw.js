@@ -15,6 +15,11 @@ self.addEventListener('activate', e => {
     self.clients.claim();
 });
 
+// Allow the UI to trigger a skip-waiting (used by the Update button)
+self.addEventListener('message', e => {
+    if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
 // Network-first for all navigation; fall back to cached root if offline
 self.addEventListener('fetch', e => {
     if (e.request.mode === 'navigate') {

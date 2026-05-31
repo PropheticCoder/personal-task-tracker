@@ -783,6 +783,13 @@
                 then <strong style="color:var(--text-1)">Add to Home Screen</strong>
             </div>
 
+            {{-- Update App --}}
+            <button onclick="wtUpdate()" id="wt-update-btn" class="wt-mob-menu-link w-100"
+                style="border:0;background:none;color:var(--text-2);text-align:left">
+                <i class="bi bi-arrow-clockwise" id="wt-update-icon"></i>
+                <span id="wt-update-label">Check for update</span>
+            </button>
+
             <form method="POST" action="/logout" style="margin:0">
                 @csrf
                 <button type="submit" class="wt-mob-menu-link w-100" style="border:0;background:none;color:var(--danger);text-align:left">
@@ -795,6 +802,20 @@
     @endauth
 
     {{ $slot }}
+
+    {{-- Install banner — sits above the bottom nav, shown by JS --}}
+    <div id="wt-install-banner" class="d-lg-none"
+        style="display:none;position:fixed;bottom:56px;left:0;right:0;z-index:390;
+               background:var(--bg-elevated);border-top:1px solid var(--border-base);
+               padding:12px 16px;align-items:center;gap:10px">
+        <i class="bi bi-app" style="font-size:22px;color:var(--accent);flex-shrink:0"></i>
+        <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--text-1)">Add to Home Screen</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3)">Install for quick access</div>
+        </div>
+        <button onclick="wtInstall()" style="background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:var(--font-mono);font-size:11px;padding:7px 14px;cursor:pointer;flex-shrink:0">Install</button>
+        <button onclick="wtDismissBanner()" style="background:none;border:none;color:var(--text-3);font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1">×</button>
+    </div>
 
     <nav class="wt-mob-nav">
         <a href="/"         class="wt-mob-tab {{ request()->is('/') ? 'active' : '' }}">
@@ -814,23 +835,115 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @livewireScripts
     <script>
-        // Service worker
+        /* ── Service worker registration ── */
+        let _swReg = null;
+        let _reloadOnController = false;
+
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(() => {});
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => {
+                    _swReg = reg;
+                    // If a new SW is already waiting (page was open across a deploy), offer update
+                    if (reg.waiting) wtShowUpdateReady();
+                    reg.addEventListener('updatefound', () => {
+                        const sw = reg.installing;
+                        sw.addEventListener('statechange', function() {
+                            if (this.state === 'installed' && navigator.serviceWorker.controller) {
+                                wtShowUpdateReady();
+                            }
+                        });
+                    });
+                })
+                .catch(() => {});
+
+            // When a new SW takes control, reload to pick up changes
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (_reloadOnController) window.location.reload();
+            });
         }
 
-        // PWA install prompt
+        function wtShowUpdateReady() {
+            const lbl = document.getElementById('wt-update-label');
+            const icon = document.getElementById('wt-update-icon');
+            if (lbl) lbl.textContent = 'Update ready — tap to reload';
+            if (icon) { icon.style.color = 'var(--accent)'; }
+            const btn = document.getElementById('wt-update-btn');
+            if (btn) btn.style.color = 'var(--accent)';
+        }
+
+        async function wtUpdate() {
+            if (!('serviceWorker' in navigator)) return;
+            const lbl   = document.getElementById('wt-update-label');
+            const icon  = document.getElementById('wt-update-icon');
+            if (lbl) lbl.textContent = 'Checking…';
+            if (icon) icon.style.animation = 'spin .8s linear infinite';
+
+            try {
+                const reg = _swReg || await navigator.serviceWorker.getRegistration('/');
+                if (!reg) { if (lbl) lbl.textContent = 'No SW found'; return; }
+
+                if (reg.waiting) {
+                    // Already has a new SW waiting — activate it
+                    _reloadOnController = true;
+                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    return;
+                }
+
+                await reg.update();
+
+                // Give the browser 4 s to find + install the new SW
+                let found = false;
+                reg.addEventListener('updatefound', () => {
+                    found = true;
+                    const sw = reg.installing;
+                    sw.addEventListener('statechange', function() {
+                        if (this.state === 'installed') {
+                            _reloadOnController = true;
+                            this.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                    });
+                });
+
+                setTimeout(() => {
+                    if (!found && !_reloadOnController) {
+                        if (lbl) lbl.textContent = 'Already up to date';
+                        if (icon) icon.style.animation = '';
+                        setTimeout(() => {
+                            if (lbl) lbl.textContent = 'Check for update';
+                            if (icon) { icon.style.color = ''; }
+                            const btn = document.getElementById('wt-update-btn');
+                            if (btn) btn.style.color = '';
+                        }, 2500);
+                    }
+                }, 4000);
+
+            } catch(e) {
+                if (lbl) lbl.textContent = 'Check failed';
+                if (icon) icon.style.animation = '';
+                setTimeout(() => { if (lbl) lbl.textContent = 'Check for update'; }, 2000);
+            }
+        }
+
+        /* ── PWA install prompt ── */
         let _installPrompt = null;
 
         window.addEventListener('beforeinstallprompt', e => {
             e.preventDefault();
             _installPrompt = e;
+            // Show banner (if not previously dismissed this session)
+            if (!sessionStorage.getItem('wt-banner-dismissed')) {
+                const banner = document.getElementById('wt-install-banner');
+                if (banner) banner.style.display = 'flex';
+            }
+            // Also show button in off-canvas menu
             const btn = document.getElementById('wt-install-btn');
             if (btn) btn.style.display = 'flex';
         });
 
         window.addEventListener('appinstalled', () => {
             _installPrompt = null;
+            const banner = document.getElementById('wt-install-banner');
+            if (banner) banner.style.display = 'none';
             const btn = document.getElementById('wt-install-btn');
             if (btn) btn.style.display = 'none';
         });
@@ -838,10 +951,19 @@
         function wtInstall() {
             if (!_installPrompt) return;
             _installPrompt.prompt();
-            _installPrompt.userChoice.then(() => { _installPrompt = null; });
+            _installPrompt.userChoice.then(() => {
+                _installPrompt = null;
+                wtDismissBanner();
+            });
         }
 
-        // iOS Safari — no beforeinstallprompt, show manual instructions instead
+        function wtDismissBanner() {
+            const banner = document.getElementById('wt-install-banner');
+            if (banner) banner.style.display = 'none';
+            sessionStorage.setItem('wt-banner-dismissed', '1');
+        }
+
+        // iOS Safari — no beforeinstallprompt
         (function() {
             const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
             const isInStandalone = ('standalone' in navigator) && navigator.standalone;
@@ -851,5 +973,8 @@
             }
         })();
     </script>
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </body>
 </html>
