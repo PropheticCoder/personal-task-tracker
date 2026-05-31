@@ -115,7 +115,7 @@
 </div>
 
 {{-- MOBILE --}}
-<div class="d-lg-none" style="padding-bottom:80px;width:100%;max-width:100vw;overflow-x:hidden">
+<div class="d-lg-none" style="padding-bottom:150px">
 
     {{-- Floating Add Task button --}}
     <button onclick="TT.showAddTask()"
@@ -135,10 +135,10 @@
     </button>
 
     {{-- Sticky filter bar --}}
-    <div style="position:sticky;top:50px;z-index:100;background:rgba(19,20,26,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border-base);padding:8px 16px;width:100%;max-width:100vw;box-sizing:border-box">
-        <div style="display:flex;gap:8px;min-width:0">
+    <div style="position:sticky;top:50px;z-index:100;background:rgba(19,20,26,.96);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--border-base);padding:10px 16px">
+        <div style="display:flex;gap:8px">
             <select id="m-filter-project" onchange="TT.setFilter('project',this.value)"
-                style="flex:1;min-width:0;background:var(--bg-elevated);border:1px solid var(--border-base);border-radius:7px;color:var(--text-1);font-family:var(--font-mono);font-size:11px;padding:7px 10px;outline:none;appearance:none;overflow:hidden;text-overflow:ellipsis">
+                style="flex:1;min-width:0;background:var(--bg-elevated);border:1px solid var(--border-base);border-radius:7px;color:var(--text-1);font-family:var(--font-mono);font-size:11px;padding:7px 10px;outline:none;appearance:none">
                 <option value="">All projects</option>
             </select>
             <input id="m-filter-search" type="text" oninput="TT.setFilter('search',this.value)" placeholder="Search…"
@@ -146,7 +146,7 @@
         </div>
     </div>
 
-    <div style="padding:16px;width:100%;box-sizing:border-box;overflow-x:hidden">
+    <div style="padding:20px 16px 16px">
 
         {{-- Projects (collapsible) --}}
         <div style="margin-bottom:20px">
@@ -170,9 +170,9 @@
 
         <div style="border-top:1px solid var(--border-faint);margin:0 0 20px"></div>
 
-        <div id="m-col-working" style="margin-bottom:24px"></div>
-        <div id="m-col-waiting" style="margin-bottom:24px"></div>
-        <div id="m-col-they-need"></div>
+        <div id="m-col-working" style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px"></div>
+        <div id="m-col-waiting" style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px"></div>
+        <div id="m-col-they-need" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
 </div>
 
