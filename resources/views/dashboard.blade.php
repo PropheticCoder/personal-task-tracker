@@ -115,7 +115,7 @@
 </div>
 
 {{-- MOBILE --}}
-<div class="d-lg-none" style="padding-bottom:80px">
+<div class="d-lg-none" style="padding-bottom:80px;width:100%;max-width:100vw;overflow-x:hidden">
 
     {{-- Floating Add Task button --}}
     <button onclick="TT.showAddTask()"
@@ -135,18 +135,18 @@
     </button>
 
     {{-- Sticky filter bar --}}
-    <div style="position:sticky;top:50px;z-index:100;background:rgba(19,20,26,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-base);padding:8px 16px">
-        <div style="display:flex;gap:8px">
+    <div style="position:sticky;top:50px;z-index:100;background:rgba(19,20,26,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border-base);padding:8px 16px;width:100%;max-width:100vw;box-sizing:border-box">
+        <div style="display:flex;gap:8px;min-width:0">
             <select id="m-filter-project" onchange="TT.setFilter('project',this.value)"
-                style="flex:1;background:var(--bg-elevated);border:1px solid var(--border-base);border-radius:7px;color:var(--text-1);font-family:var(--font-mono);font-size:11px;padding:7px 10px;outline:none;appearance:none">
+                style="flex:1;min-width:0;background:var(--bg-elevated);border:1px solid var(--border-base);border-radius:7px;color:var(--text-1);font-family:var(--font-mono);font-size:11px;padding:7px 10px;outline:none;appearance:none;overflow:hidden;text-overflow:ellipsis">
                 <option value="">All projects</option>
             </select>
-            <input id="m-filter-search" type="text" oninput="TT.setFilter('search',this.value)" placeholder="Search tasks…"
-                style="flex:1;background:var(--bg-elevated);border:1px solid var(--border-base);border-radius:7px;color:var(--text-1);font-family:var(--font-mono);font-size:11px;padding:7px 10px;outline:none" />
+            <input id="m-filter-search" type="text" oninput="TT.setFilter('search',this.value)" placeholder="Search…"
+                style="flex:1;min-width:0;background:var(--bg-elevated);border:1px solid var(--border-base);border-radius:7px;color:var(--text-1);font-family:var(--font-mono);font-size:11px;padding:7px 10px;outline:none" />
         </div>
     </div>
 
-    <div style="padding:16px">
+    <div style="padding:16px;width:100%;box-sizing:border-box;overflow-x:hidden">
 
         {{-- Projects (collapsible) --}}
         <div style="margin-bottom:20px">

@@ -64,6 +64,11 @@
 
         html, body { height: 100%; }
 
+        html {
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+
         body {
             background: var(--bg-base);
             color: var(--text-1);
@@ -72,6 +77,7 @@
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+            max-width: 100%;
         }
 
         /* Subtle dot grid */
