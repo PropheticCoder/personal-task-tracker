@@ -137,6 +137,14 @@
                                 <i class="bi bi-camera-video me-1"></i> + Meeting
                             </a>
                         </li>
+                        @if($project->meetings->isNotEmpty())
+                        <li class="nav-item">
+                            <a class="nav-link text-muted" href="#meetings-section">
+                                <i class="bi bi-clock-history me-1"></i> Meetings
+                                <span class="badge bg-secondary ms-1" style="font-size:9px">{{ $project->meetings->count() }}</span>
+                            </a>
+                        </li>
+                        @endif
                         <li class="nav-item">
                             <a class="nav-link text-muted" href="#"><i class="bi bi-clock-history me-1"></i> Timeline</a>
                         </li>
@@ -322,6 +330,46 @@
 
             @if($project->tasks->isEmpty())
                 <p class="text-muted small">No tasks yet — add one above.</p>
+            @endif
+
+            {{-- MEETINGS --}}
+            @if($project->meetings->isNotEmpty())
+            <section id="meetings-section" class="mt-2">
+                <p class="text-uppercase fw-semibold mb-3" style="font-size:11px;letter-spacing:.1em;color:var(--text-3)">
+                    <i class="bi bi-camera-video me-1"></i>Meetings
+                </p>
+                <div class="d-flex flex-column gap-2">
+                    @foreach($project->meetings as $meeting)
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body py-2 px-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <a href="{{ route('meetings.show', $meeting) }}"
+                                   class="text-decoration-none fw-medium small flex-grow-1" style="color:var(--text-1)">
+                                    {{ $meeting->title }}
+                                </a>
+                                <small class="text-muted flex-shrink-0">{{ $meeting->held_at->format('d M Y') }}</small>
+                                @php $actionCount = $meeting->tasks_count ?? 0; @endphp
+                                @if($actionCount)
+                                    <span class="badge bg-light border text-muted flex-shrink-0" style="font-size:9px">
+                                        {{ $actionCount }} action {{ Str::plural('item', $actionCount) }}
+                                    </span>
+                                @endif
+                                <a href="{{ route('meetings.show', $meeting) }}"
+                                   class="text-muted flex-shrink-0" style="font-size:12px">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="mt-2">
+                    <a href="{{ route('meetings.create', $project) }}"
+                       style="font-family:var(--font-mono);font-size:11px;color:var(--accent);text-decoration:none">
+                        + Log a meeting
+                    </a>
+                </div>
+            </section>
             @endif
 
         </div>

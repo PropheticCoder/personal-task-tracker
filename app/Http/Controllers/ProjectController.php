@@ -35,7 +35,7 @@ class ProjectController extends Controller
         $project->load([
             'client.people',
             'tasks' => fn($q) => $q->orderByRaw("FIELD(status,'working_on','waiting_on','todo','done','archived')"),
-            'meetings' => fn($q) => $q->orderByDesc('held_at'),
+            'meetings' => fn($q) => $q->orderByDesc('held_at')->withCount('tasks'),
         ]);
 
         $clients = Client::where('workspace_id', app('current_workspace')->id)->orderBy('name')->get();

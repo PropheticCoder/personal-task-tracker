@@ -274,7 +274,9 @@
 <div class="modal fade" id="editTaskModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="{{ route('tasks.update', $task) }}">
+
+            {{-- Edit form closes before footer so delete form is never nested inside it --}}
+            <form id="form-edit-task" method="POST" action="{{ route('tasks.update', $task) }}">
                 @csrf @method('PATCH')
                 <div class="modal-header">
                     <h6 class="modal-title fw-semibold">Edit Task</h6>
@@ -328,18 +330,21 @@
                     </div>
 
                 </div>
-                <div class="modal-footer justify-content-between">
-                    <form method="POST" action="{{ route('tasks.destroy', $task) }}"
-                          onsubmit="return confirm('Delete this task and all its activity? This cannot be undone.')">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete task</button>
-                    </form>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
-                    </div>
-                </div>
             </form>
+
+            {{-- Footer sits outside the edit form — delete form is standalone, save uses form= attribute --}}
+            <div class="modal-footer justify-content-between">
+                <form method="POST" action="{{ route('tasks.destroy', $task) }}"
+                      onsubmit="return confirm('Delete this task and all its activity? This cannot be undone.')">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete task</button>
+                </form>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" form="form-edit-task" class="btn btn-primary btn-sm">Save</button>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Project;
 use App\Models\Task;
-use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
@@ -57,14 +56,6 @@ class DashboardController extends Controller
                 $blocker    = $t->blocker;
                 $commitment = $t->commitments->first();
 
-                // JS column logic:
-                //   status='working'  → Working On column (no blocker dep)
-                //   status='working'  + blocked_by_person → Waiting On column
-                //   waiting_on status → always Waiting On column
-                $jsStatus = $t->status === 'waiting_on' ? 'working' : 'working';
-
-                // For waiting_on status tasks, use the blocker dep if present,
-                // otherwise the task title context is enough
                 return [
                     'id'         => $t->id,
                     'title'      => $t->title,
@@ -81,10 +72,43 @@ class DashboardController extends Controller
 
                     'needed_by_person'  => $commitment?->person?->name,
                     'needed_by_date'    => $commitment?->needed_by?->format('Y-m-d'),
+                    'needed_by_what'    => $commitment?->description,
                     'commitment_dep_id' => $commitment?->id,
                 ];
             })->values();
 
-        return view('dashboard', compact('clients', 'projects', 'tasks'));
+        // Recent meetings — last 5 across all workspace projects
+        $recentMeetings = \App\Models\Meeting::whereIn('project_id', $projectIds)
+            ->with('project')
+            ->withCount('tasks')
+            ->orderByDesc('held_at')
+            ->limit(5)
+            ->get()
+            ->map(fn($m) => [
+                'id'         => $m->id,
+                'title'      => $m->title,
+                'held_at'    => $m->held_at->format('d M Y'),
+                'held_at_rel'=> $m->held_at->diffForHumans(),
+                'project'    => $m->project?->name,
+                'project_id' => $m->project_id,
+                'task_count' => $m->tasks_count,
+                'url'        => route('meetings.show', $m->id),
+            ])->values();
+
+        // todo tasks — for "Next Up" section on dashboard
+        $todoTasks = Task::whereIn('project_id', $projectIds)
+            ->where('status', 'todo')
+            ->orderByRaw("FIELD(priority,'high','med','low',NULL)")
+            ->orderBy('needed_by')
+            ->get()
+            ->map(fn($t) => [
+                'id'         => $t->id,
+                'title'      => $t->title,
+                'project_id' => $t->project_id,
+                'priority'   => $t->priority,
+                'needed_by'  => $t->needed_by?->format('Y-m-d'),
+            ])->values();
+
+        return view('dashboard', compact('clients', 'projects', 'tasks', 'todoTasks', 'recentMeetings'));
     }
 }

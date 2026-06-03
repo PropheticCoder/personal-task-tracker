@@ -49,14 +49,41 @@
                         style="background:var(--bg-elevated);border:1px solid var(--border-base);border-radius:7px;color:var(--text-1);font-family:var(--font-mono);font-size:11px;padding:6px 12px 6px 28px;outline:none;width:175px"
                         onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-base)'" />
                 </div>
+                <button id="btn-layout-toggle" onclick="TT.toggleLayout()" class="wt-btn" style="padding:6px 10px" title="Switch to list view">
+                    <i class="bi bi-list-ul" style="font-size:13px"></i>
+                </button>
                 <button id="btn-add-task" onclick="TT.showAddTask()" class="wt-btn wt-btn-accent" style="padding:6px 14px">
                     <i class="bi bi-plus-lg" style="font-size:11px"></i> Add Task
                 </button>
             </div>
         </div>
 
+        {{-- Stats bar --}}
+        <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+            <div id="stat-working" class="dash-stat" style="cursor:pointer" onclick="document.getElementById('col-working')?.closest('div')?.scrollIntoView({behavior:'smooth',block:'nearest'})">
+                <span style="width:7px;height:7px;border-radius:50%;background:var(--info);flex-shrink:0;box-shadow:0 0 6px rgba(79,196,255,.45)"></span>
+                <span class="sc-count" style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text-1);line-height:1">0</span>
+                <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;align-self:flex-end;padding-bottom:2px">Working On</span>
+            </div>
+            <div id="stat-waiting" class="dash-stat" style="cursor:pointer" onclick="document.getElementById('col-waiting')?.closest('div')?.scrollIntoView({behavior:'smooth',block:'nearest'})">
+                <span style="width:7px;height:7px;border-radius:50%;background:var(--warning);flex-shrink:0;animation:pip-pulse 2s ease-in-out infinite"></span>
+                <span class="sc-count" style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text-1);line-height:1">0</span>
+                <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;align-self:flex-end;padding-bottom:2px">Waiting On</span>
+            </div>
+            <div id="stat-owed" class="dash-stat">
+                <span style="width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0"></span>
+                <span class="sc-count" style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text-1);line-height:1">0</span>
+                <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;align-self:flex-end;padding-bottom:2px">Owed</span>
+            </div>
+            <div id="stat-todo" class="dash-stat">
+                <span style="width:7px;height:7px;border-radius:50%;background:var(--text-3);flex-shrink:0"></span>
+                <span class="sc-count" style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text-1);line-height:1">0</span>
+                <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;align-self:flex-end;padding-bottom:2px">To-Do</span>
+            </div>
+        </div>
+
         {{-- Projects strip --}}
-        <div style="margin-bottom:28px">
+        <div style="margin-bottom:24px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
                 <span style="font-family:var(--font-mono);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:var(--text-3)">Projects</span>
                 <a href="/projects/create" class="wt-btn" style="padding:4px 12px;font-size:10px"><i class="bi bi-plus-lg"></i> New</a>
@@ -67,7 +94,7 @@
         <div style="border-top:1px solid var(--border-faint);margin-bottom:20px"></div>
 
         {{-- Three columns --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:start">
+        <div id="wt-board" class="wt-board-grid">
 
             {{-- WORKING ON --}}
             <div>
@@ -110,6 +137,39 @@
 
         </div>
 
+        {{-- Bottom panels: Next Up + Recent Meetings --}}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px">
+
+            {{-- Next Up panel --}}
+            <div class="dash-panel">
+                <div class="dash-panel-hdr">
+                    <div style="display:flex;align-items:center;gap:7px">
+                        <i class="bi bi-arrow-right-circle" style="color:var(--text-3);font-size:13px"></i>
+                        <span style="font-family:var(--font-mono);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:var(--text-3)">Next Up</span>
+                        <span id="count-todo" style="font-family:var(--font-mono);font-size:9px;background:var(--bg-hover);padding:1px 6px;border-radius:4px;color:var(--text-3)">0</span>
+                    </div>
+                    <button onclick="TT.toggleTodoAll()" id="btn-todo-all" class="dash-view-all-btn" style="display:none"></button>
+                </div>
+                <div class="dash-panel-body">
+                    <div id="col-todo" style="display:flex;flex-direction:column;gap:6px"></div>
+                </div>
+            </div>
+
+            {{-- Recent Meetings panel --}}
+            <div class="dash-panel">
+                <div class="dash-panel-hdr">
+                    <div style="display:flex;align-items:center;gap:7px">
+                        <i class="bi bi-camera-video" style="color:var(--text-3);font-size:13px"></i>
+                        <span style="font-family:var(--font-mono);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:var(--text-3)">Recent Meetings</span>
+                    </div>
+                    <button onclick="TT.toggleMeetingAll()" id="btn-meeting-all" class="dash-view-all-btn" style="display:none"></button>
+                </div>
+                <div class="dash-panel-body">
+                    <div id="col-meetings" style="display:flex;flex-direction:column;gap:6px"></div>
+                </div>
+            </div>
+
+        </div>
 
     </main>
 </div>
@@ -146,7 +206,31 @@
         </div>
     </div>
 
-    <div style="padding:20px 16px 16px">
+    <div style="padding:16px 16px 12px">
+
+        {{-- Mobile stats strip --}}
+        <div style="display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px">
+            <div id="m-stat-working" class="m-dash-stat">
+                <span class="sc-count" style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--info);line-height:1">0</span>
+                <span style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px">Working</span>
+            </div>
+            <div id="m-stat-waiting" class="m-dash-stat">
+                <span class="sc-count" style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--warning);line-height:1">0</span>
+                <span style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px">Waiting</span>
+            </div>
+            <div id="m-stat-owed" class="m-dash-stat">
+                <span class="sc-count" style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--success);line-height:1">0</span>
+                <span style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px">Owed</span>
+            </div>
+            <div id="m-stat-todo" class="m-dash-stat">
+                <span class="sc-count" style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text-2);line-height:1">0</span>
+                <span style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px">To-Do</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div style="padding:0 16px 16px">
 
         {{-- Projects (collapsible) --}}
         <div style="margin-bottom:20px">
@@ -172,7 +256,34 @@
 
         <div id="m-col-working" style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px"></div>
         <div id="m-col-waiting" style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px"></div>
-        <div id="m-col-they-need" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="m-col-they-need" style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px"></div>
+
+        {{-- Next Up --}}
+        <div id="m-todo-section">
+            <div style="border-top:1px solid var(--border-faint);margin-bottom:16px"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:7px">
+                    <i class="bi bi-arrow-right-circle" style="color:var(--text-3);font-size:12px"></i>
+                    <span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-3)">Next Up</span>
+                    <span id="m-count-todo" style="font-family:var(--font-mono);font-size:9px;background:var(--bg-elevated);padding:1px 6px;border-radius:4px;color:var(--text-3)">0</span>
+                </div>
+                <button onclick="TT.toggleTodoAll()" id="m-btn-todo-all" class="dash-view-all-btn" style="display:none"></button>
+            </div>
+            <div id="m-col-todo" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+
+        {{-- Recent Meetings --}}
+        <div id="m-meetings-section" style="margin-top:8px">
+            <div style="border-top:1px solid var(--border-faint);margin-bottom:16px;margin-top:20px"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:7px">
+                    <i class="bi bi-camera-video" style="color:var(--text-3);font-size:12px"></i>
+                    <span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-3)">Recent Meetings</span>
+                </div>
+                <button onclick="TT.toggleMeetingAll()" id="m-btn-meeting-all" class="dash-view-all-btn" style="display:none"></button>
+            </div>
+            <div id="m-col-meetings" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
     </div>
 </div>
 
@@ -288,6 +399,74 @@
 </div>
 
 <style>
+/* Board layout modes */
+.wt-board-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:start; }
+.wt-board-list { display:flex;flex-direction:column;gap:8px; }
+.wt-board-list > div > .tt-col-add-btn { display:none; }
+
+/* Stats chips (desktop) — equal-width so the row looks uniform */
+.dash-stat {
+    display:flex;align-items:center;gap:10px;
+    background:var(--bg-elevated);border:1px solid var(--border-faint);
+    border-radius:10px;padding:12px 18px;
+    transition:border-color .2s,background .2s;
+    flex:1;min-width:130px;
+}
+.dash-stat:hover { border-color:var(--border-base);background:var(--bg-hover); }
+
+/* Stats chips (mobile) — equal-width in the scroll strip */
+.m-dash-stat {
+    display:flex;flex-direction:column;align-items:center;
+    background:var(--bg-elevated);border:1px solid var(--border-faint);
+    border-radius:8px;padding:10px 14px;flex-shrink:0;min-width:76px;width:76px;
+}
+
+/* Bottom panels */
+.dash-panel {
+    background:var(--bg-elevated);border:1px solid var(--border-faint);
+    border-radius:12px;overflow:hidden;
+}
+.dash-panel-hdr {
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 14px;border-bottom:1px solid var(--border-faint);
+    background:rgba(0,0,0,.08);
+}
+.dash-panel-body { padding:12px;display:flex;flex-direction:column;gap:0; }
+.dash-view-all-btn {
+    font-family:var(--font-mono);font-size:10px;color:var(--accent);
+    background:none;border:none;cursor:pointer;padding:0;
+    transition:opacity .15s;white-space:nowrap;
+}
+.dash-view-all-btn:hover { opacity:.7; }
+
+/* Meeting cards */
+.meeting-card {
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:10px 11px;background:var(--bg-raised);border:1px solid var(--border-faint);
+    border-radius:8px;text-decoration:none;
+    transition:border-color .2s,background .2s;
+    animation:card-in .35s cubic-bezier(.16,1,.3,1) both;
+}
+.meeting-card + .meeting-card { margin-top:6px; }
+.meeting-card:hover { border-color:var(--border-base);background:var(--bg-hover); }
+.meeting-title { font-size:13px;font-weight:500;color:var(--text-1);line-height:1.3; }
+.meeting-meta { font-family:var(--font-mono);font-size:9.5px;color:var(--text-3);margin-top:3px; }
+.meeting-date { font-family:var(--font-mono);font-size:10px;color:var(--text-3);white-space:nowrap;text-align:right; }
+.meeting-badge {
+    font-family:var(--font-mono);font-size:9px;color:var(--accent);
+    background:var(--accent-bg);border-radius:3px;padding:1px 5px;
+    display:inline-block;margin-top:4px;
+}
+
+/* Error toast */
+#wt-error-toast {
+    position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:9000;
+    background:var(--danger-bg);border:1px solid var(--danger);border-radius:8px;
+    padding:10px 16px;font-family:var(--font-mono);font-size:11px;color:var(--danger);
+    white-space:nowrap;pointer-events:none;opacity:0;
+    transition:opacity .25s;
+}
+
 .tt-col-add-btn:hover { border-color:var(--border-base)!important;color:var(--text-1)!important; }
 .wt-sb-proj-link:hover,.wt-tool-btn:hover { background:rgba(255,255,255,.04); }
 .wt-tool-btn:hover span,.wt-tool-btn:hover i { color:var(--text-1)!important; }
@@ -356,16 +535,29 @@ const TT = {
     clients:  @json($clients),
     projects: @json($projects),
     tasks:    @json($tasks),
+    todos:    @json($todoTasks),
+    meetings: @json($recentMeetings),
 
     filter: { project: '', search: '' },
     _colAddType: null,
     _addModal: null,
     _colModal: null,
+    _layout: localStorage.getItem('wt-layout') || 'board',
+    _todoShowAll:    false,
+    _meetingShowAll: false,
 
     /* ── Computed views ── */
     workingOn()  { return this._filtered(t => t.status==='working' && !t.blocked_by_person); },
     waitingOn()  { return this._filtered(t => t.status==='working' && !!t.blocked_by_person); },
     theyNeed()   { return this._filtered(t => t.status==='working' && !!t.needed_by_person); },
+    todoList()   {
+        const pf = this.filter.project, sf = this.filter.search.toLowerCase();
+        return this.todos.filter(t => {
+            if (pf && this._project(t)?.name !== pf) return false;
+            if (sf && !t.title.toLowerCase().includes(sf)) return false;
+            return true;
+        });
+    },
 
     _filtered(fn) {
         return this.tasks.filter(t => {
@@ -383,21 +575,27 @@ const TT = {
     _csrf() { return document.querySelector('meta[name="csrf-token"]')?.content ?? ''; },
 
     async _patch(taskId, body) {
-        await fetch(`/tasks/${taskId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': this._csrf(), 'Accept': 'application/json' },
-            body: JSON.stringify(body),
-        });
+        try {
+            const res = await fetch(`/tasks/${taskId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': this._csrf(), 'Accept': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) { this._showError(); return false; }
+            return true;
+        } catch { this._showError('Network error — check your connection.'); return false; }
     },
 
     async _post(url, body) {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': this._csrf(), 'Accept': 'application/json' },
-            body: JSON.stringify(body),
-        });
-        if (!res.ok) return null;
-        return res.json();
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': this._csrf(), 'Accept': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) { this._showError(); return null; }
+            return res.json();
+        } catch { this._showError('Network error — check your connection.'); return null; }
     },
 
     /* ── Actions ── */
@@ -418,13 +616,13 @@ const TT = {
         await this._post(`/tasks/${id}/resolve-blocker`, {});
     },
 
-    async setCommitment(id, person, date) {
+    async setCommitment(id, person, date, what = null) {
         const t = this._find(id);
-        t.needed_by_person = person; t.needed_by_date = date;
+        t.needed_by_person = person; t.needed_by_date = date; t.needed_by_what = what;
         this.render();
         const result = await this._post('/dependencies', {
             direction: 'i_owe', task_id: id, person_name: person,
-            description: `Output needed by ${person}`, needed_by: date || null,
+            description: what || `Owed to ${person}`, needed_by: date || null,
         });
         if (result?.dep_id) t.commitment_dep_id = result.dep_id;
     },
@@ -435,6 +633,36 @@ const TT = {
         t.needed_by_person = null; t.needed_by_date = null; t.commitment_dep_id = null;
         this.render();
         if (depId) await this._post(`/dependencies/${depId}/resolve`, {});
+    },
+
+    async startTask(id) {
+        const todo = this.todos.find(t => t.id == id);
+        if (!todo) return;
+        // Optimistic: move from todos into working tasks
+        this.todos = this.todos.filter(t => t.id != id);
+        this.tasks.push({
+            id: todo.id, title: todo.title, project_id: todo.project_id,
+            priority: todo.priority, status: 'working',
+            blocked_by_person: null, blocked_by_what: null, blocked_overdue: false,
+            blocker_dep_id: null, needed_by_person: null, needed_by_date: null, commitment_dep_id: null,
+        });
+        this.render();
+        const ok = await this._patch(todo.id, { status: 'working_on' });
+        if (ok === false) {
+            // Revert on failure
+            this.tasks = this.tasks.filter(t => t.id != id);
+            this.todos.push(todo);
+            this.render();
+        }
+    },
+
+    _showError(msg) {
+        const el = document.getElementById('wt-error-toast');
+        if (!el) return;
+        el.querySelector('.wt-toast-body').textContent = msg || 'Something went wrong — please try again.';
+        el.style.opacity = '1'; el.style.pointerEvents = 'auto';
+        clearTimeout(el._t);
+        el._t = setTimeout(() => { el.style.opacity = '0'; el.style.pointerEvents = 'none'; }, 4000);
     },
 
     markDone(id) {
@@ -608,9 +836,10 @@ const TT = {
     confirmCommit(id) {
         const card = this._visibleCard(id);
         const person = card.querySelector('.tt-cf-person').value.trim();
+        const what   = card.querySelector('.tt-cf-what')?.value.trim() || null;
         const date   = card.querySelector('.tt-cf-date').value;
         if (!person) return;
-        this.setCommitment(id, person, date);
+        this.setCommitment(id, person, date, what);
     },
 
     _populateProjectSelect(elId) {
@@ -621,8 +850,26 @@ const TT = {
             this.projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
     },
 
+    toggleLayout() {
+        this._layout = this._layout === 'board' ? 'list' : 'board';
+        localStorage.setItem('wt-layout', this._layout);
+        this.render();
+    },
+
     /* ── Render ── */
     render() {
+        const isList = this._layout === 'list';
+
+        // Apply layout class to board container
+        const board = document.getElementById('wt-board');
+        if (board) board.className = isList ? 'wt-board-list' : 'wt-board-grid';
+
+        const toggleBtn = document.getElementById('btn-layout-toggle');
+        if (toggleBtn) {
+            toggleBtn.title = isList ? 'Switch to board view' : 'Switch to list view';
+            toggleBtn.querySelector('i').className = isList ? 'bi bi-grid-3x2-gap' : 'bi bi-list-ul';
+        }
+
         this._renderCol('col-working',  this.workingOn(),  'working');
         this._renderCol('col-waiting',  this.waitingOn(),  'waiting');
         this._renderCol('col-they-need',this.theyNeed(),   'they-need');
@@ -636,6 +883,110 @@ const TT = {
         this._renderProjectsStrip();
         this._renderFilterOptions();
         this._renderToolTaskSelect();
+        this._renderStats();
+        this._renderTodo();
+        this._renderMeetings();
+    },
+
+    toggleTodoAll() {
+        this._todoShowAll = !this._todoShowAll;
+        this._renderTodo();
+    },
+
+    toggleMeetingAll() {
+        this._meetingShowAll = !this._meetingShowAll;
+        this._renderMeetings();
+    },
+
+    _renderStats() {
+        const data = [
+            { key:'working', count: this.workingOn().length },
+            { key:'waiting', count: this.waitingOn().length },
+            { key:'owed',    count: this.theyNeed().length  },
+            { key:'todo',    count: this.todoList().length  },
+        ];
+        data.forEach(s => {
+            [`stat-${s.key}`, `m-stat-${s.key}`].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const cnt = el.querySelector('.sc-count');
+                if (cnt) cnt.textContent = s.count;
+                el.style.opacity = s.count > 0 ? '1' : '0.45';
+            });
+        });
+    },
+
+    _renderTodo() {
+        const MAX = 5;
+        const todos = this.todoList();
+        const visible = this._todoShowAll ? todos : todos.slice(0, MAX);
+
+        const emptyHTML = `<p style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);text-align:center;padding:20px 0">
+            <i class="bi bi-check2-circle" style="font-size:18px;display:block;margin-bottom:6px;opacity:.4"></i>All clear — nothing queued.</p>`;
+
+        const cardHTML = t => {
+            const proj  = this._project(t);
+            const pclr  = proj?.color || '#666';
+            const pname = proj?.name  || '';
+            const prio  = t.priority ? `<span class="tt-prio ${t.priority}">${t.priority.toUpperCase()}</span>` : '';
+            const due   = t.needed_by ? `<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-3)">${this._fmtDate(t.needed_by)}</span>` : '';
+            return `<div class="tt-card" data-todo-id="${t.id}" style="border-left:3px solid ${pclr};display:flex;align-items:center;gap:8px;padding:9px 11px">
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:500;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this._esc(t.title)}</div>
+                    <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">${pname ? `<span class="tt-project-tag" style="color:${pclr}">${this._esc(pname)}</span>` : ''}${prio}${due}</div>
+                </div>
+                <button onclick="TT.startTask(${t.id})" class="wt-btn wt-btn-accent" style="padding:4px 10px;font-size:10px;flex-shrink:0;white-space:nowrap">
+                    Start <i class="bi bi-play-fill" style="font-size:9px"></i>
+                </button>
+            </div>`;
+        };
+
+        [['col-todo','btn-todo-all'], ['m-col-todo','m-btn-todo-all']].forEach(([colId, btnId]) => {
+            const el  = document.getElementById(colId);
+            const btn = document.getElementById(btnId);
+            if (!el) return;
+            el.innerHTML = todos.length ? visible.map(cardHTML).join('') : emptyHTML;
+            if (btn) {
+                btn.style.display = todos.length > MAX ? 'inline-block' : 'none';
+                btn.textContent = this._todoShowAll ? '← Show less' : `View all ${todos.length} →`;
+            }
+        });
+
+        ['count-todo','m-count-todo'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = todos.length;
+        });
+    },
+
+    _renderMeetings() {
+        const MAX = 3;
+        const visible = this._meetingShowAll ? this.meetings : this.meetings.slice(0, MAX);
+
+        const emptyHTML = `<p style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);text-align:center;padding:20px 0">
+            <i class="bi bi-camera-video" style="font-size:18px;display:block;margin-bottom:6px;opacity:.4"></i>No meetings logged yet.</p>`;
+
+        const cardHTML = m => `
+            <a href="${m.url}" class="meeting-card">
+                <div style="flex:1;min-width:0">
+                    <div class="meeting-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this._esc(m.title)}</div>
+                    <div class="meeting-meta">${this._esc(m.project || 'Internal')}</div>
+                </div>
+                <div style="text-align:right;flex-shrink:0">
+                    <div class="meeting-date">${m.held_at}</div>
+                    ${m.task_count ? `<span class="meeting-badge">${m.task_count} item${m.task_count > 1 ? 's' : ''}</span>` : ''}
+                </div>
+            </a>`;
+
+        [['col-meetings','btn-meeting-all'], ['m-col-meetings','m-btn-meeting-all']].forEach(([colId, btnId]) => {
+            const el  = document.getElementById(colId);
+            const btn = document.getElementById(btnId);
+            if (!el) return;
+            el.innerHTML = this.meetings.length ? visible.map(cardHTML).join('') : emptyHTML;
+            if (btn) {
+                btn.style.display = this.meetings.length > MAX ? 'inline-block' : 'none';
+                btn.textContent = this._meetingShowAll ? '← Show less' : `View all ${this.meetings.length} →`;
+            }
+        });
     },
 
     _renderCol(colId, tasks, type, isMobile) {
@@ -692,6 +1043,7 @@ const TT = {
                 <div class="tt-commit-form" style="display:none;margin-top:10px;background:var(--bg-elevated);border:1px solid var(--border-base);border-radius:8px;padding:10px">
                     <p style="font-family:var(--font-mono);font-size:9px;color:var(--success);text-transform:uppercase;letter-spacing:.1em;margin:0 0 8px">Who needs this from you?</p>
                     ${this._personSelectForProject(t.project_id, 'tt-cf-person', '— select contact —')}
+                    <input type="text" class="tt-cf-what form-control form-control-sm mb-2" placeholder="What exactly will you deliver?" />
                     <input type="date" class="tt-cf-date form-control form-control-sm mb-2" />
                     <div style="display:flex;gap:6px">
                         <button onclick="TT.cancelForm(${t.id})" class="btn btn-outline-secondary btn-sm flex-fill">Cancel</button>
@@ -750,8 +1102,9 @@ const TT = {
                 </div>
                 <div class="tt-card-meta">${ pname ? `<span class="tt-project-tag" style="color:${pclr}">${this._esc(pname)}</span>` : '' }${prio}</div>
                 <div class="tt-need-block">
-                    <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);margin-bottom:3px">NEEDED BY</div>
+                    <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);margin-bottom:3px">OWED TO</div>
                     <div class="tt-need-who">${this._esc(t.needed_by_person)}</div>
+                    ${t.needed_by_what ? `<div style="font-size:11px;color:var(--text-2);margin-top:3px">${this._esc(t.needed_by_what)}</div>` : ''}
                     ${dateStr ? `<div class="tt-need-date">by ${dateStr}</div>` : ''}
                     ${overdueTag}
                     ${blockedNote}
@@ -925,6 +1278,8 @@ function openTool(key, label) {
 
 document.addEventListener('DOMContentLoaded', () => TT.init());
 </script>
+
+<div id="wt-error-toast"><i class="bi bi-wifi-off me-1"></i><span class="wt-toast-body"></span></div>
 
 {{-- Update preview modal (generated per project) --}}
 <div class="modal fade" id="updateModal" tabindex="-1">
